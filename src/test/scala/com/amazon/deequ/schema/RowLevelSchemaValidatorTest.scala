@@ -41,6 +41,7 @@ class RowLevelSchemaValidatorTest extends WordSpec with SparkContextSpec {
         .withTimestampColumn("event_time", mask = "yyyy-MM-dd HH:mm:ss", isNullable = false)
 
       val result = RowLevelSchemaValidator.validate(data, schema)
+//      result.validRows.show()
 
       assert(result.numValidRows == 2)
       val validIds = result.validRows.select("id").collect.map { _.getInt(0) }.toSet
@@ -242,7 +243,7 @@ class RowLevelSchemaValidatorTest extends WordSpec with SparkContextSpec {
       val fieldsByName = result.validRows.schema.fields.map { field => field.name -> field }.toMap
 
       /* Ensure that the data was casted correctly */
-      assert(fieldsByName.size == 3)
+      assert(fieldsByName.size == 5)
       assert(fieldsByName("id").dataType == IntegerType)
       assert(fieldsByName("name").dataType == StringType)
       assert(fieldsByName("event_time").dataType == TimestampType)

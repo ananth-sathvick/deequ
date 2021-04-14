@@ -239,7 +239,7 @@ object RowLevelSchemaValidator {
     schema.columnDefinitions.foldLeft(expr(true.toString)) { case (cnf, columnDefinition) =>
 
       var nextCnf = cnf
-      var errorMessage :Column = lit("")
+      var errorMessage :Column = lit(null)
 
       if (!columnDefinition.isNullable) {
         nextCnf = nextCnf.and(col(columnDefinition.name).isNotNull)
