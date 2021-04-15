@@ -17,7 +17,7 @@
 package com.amazon.deequ.schema
 
 import org.apache.spark.sql.catalyst.dsl.expressions.{DslExpression, StringToAttributeConversionHelper}
-import org.apache.spark.sql.functions.{col, expr, length, lit, not, regexp_extract, unix_timestamp, when}
+import org.apache.spark.sql.functions.{col, expr, length, lit, not, regexp_extract, unix_timestamp, when,concat_ws}
 import org.apache.spark.sql.types.{DataTypes, DecimalType, IntegerType, TimestampType}
 import org.apache.spark.sql.{Column, DataFrame}
 import org.apache.spark.storage.StorageLevel
@@ -194,8 +194,8 @@ object RowLevelSchemaValidator {
                 storageLevelForIntermediateResults: StorageLevel = StorageLevel.MEMORY_AND_DISK
               ): RowLevelSchemaValidationResult = {
 
-//    val dataWithMatches = data.withColumn(MATCHES_COLUMN, toCNF(schema))
-    val dataWithMatches = toCNF(schema,data)
+    //    val dataWithMatches = data.withColumn(MATCHES_COLUMN, toCNF(schema))
+    val dataWithMatches = toCNF(schema, data)
     dataWithMatches.persist(storageLevelForIntermediateResults)
 
 
@@ -233,13 +233,13 @@ object RowLevelSchemaValidator {
     dataWithMatches.select(projection: _*).where(col(MATCHES_COLUMN))
   }
 
-  private[this] def toCNF(schema: RowLevelSchema,data : DataFrame): DataFrame = {
-    var changedData = data.withColumn("Condition Failed",lit(null))
+  private[this] def toCNF(schema: RowLevelSchema, data: DataFrame): DataFrame = {
+    var changedData = data.withColumn("Condition Failed", lit(null))
 
     schema.columnDefinitions.foldLeft(expr(true.toString)) { case (cnf, columnDefinition) =>
 
       var nextCnf = cnf
-      var errorMessage :Column = lit(null)
+      var errorMessage: Column = lit(null)
 
       if (!columnDefinition.isNullable) {
         nextCnf = nextCnf.and(col(columnDefinition.name).isNotNull)
@@ -299,10 +299,10 @@ object RowLevelSchemaValidator {
           nextCnf = nextCnf.and(colIsNull.or(unix_timestamp(col(tsDef.name), tsDef.mask).cast(TimestampType).isNotNull))
           errorMessage = errorMessage.and(colIsNull.or(unix_timestamp(col(tsDef.name), tsDef.mask).cast(TimestampType).isNotNull))
       }
-        changedData = changedData.withColumn(MATCHES_COLUMN,errorMessage)
-        changedData = changedData.withColumn("Condition Failed", when(col(MATCHES_COLUMN) === false,lit(errorMessage.toString())).otherwise(col("Condition Failed")))
-        changedData = changedData.withColumn(MATCHES_COLUMN,nextCnf)
-        nextCnf
+      changedData = changedData.withColumn(MATCHES_COLUMN, errorMessage)
+      changedData = changedData.withColumn("Condition Failed", when(col(MATCHES_COLUMN) === false, concat_ws("",col("Condition Failed"),lit("---") ,lit(errorMessage.toString()))).otherwise(col("Condition Failed")))
+      changedData = changedData.withColumn(MATCHES_COLUMN, nextCnf)
+      nextCnf
 
     }
     changedData

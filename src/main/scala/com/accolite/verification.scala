@@ -14,13 +14,13 @@ object verification extends App {
   val data = Seq(
     ("123", "Product A", "2012-07-22 22:59:59"),
     ("N/A", "Product B", null),
-    ("456", null, "2012-07-22 22:59:59"),
+    (null, null, "2012-07-22 22:59:59"),
     (null, "Product C", "2012-07-22 22:59:59")
   ).toDF("id", "name", "event_time")
 
   val schema = RowLevelSchema()
     .withIntColumn("id", isNullable = false)
-    .withStringColumn("name", maxLength = Some(10))
+    .withStringColumn("name", maxLength = Some(10), isNullable = false)
     .withTimestampColumn("event_time", mask = "yyyy-MM-dd HH:mm:ss", isNullable = false)
 
   val result = RowLevelSchemaValidator.validate(data, schema)
