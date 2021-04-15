@@ -235,10 +235,10 @@ object RowLevelSchemaValidator {
 
   private[this] def toCNF(schema: RowLevelSchema, data: DataFrame): DataFrame = {
     var changedData = data.withColumn("Condition Failed", lit(null))
-
+    var nextCnf:Column = lit(true)
     schema.columnDefinitions.foldLeft(expr(true.toString)) { case (cnf, columnDefinition) =>
 
-      var nextCnf = cnf
+      nextCnf = cnf
       var errorMessage: Column = lit(null)
 
       if (!columnDefinition.isNullable) {
@@ -301,10 +301,9 @@ object RowLevelSchemaValidator {
       }
       changedData = changedData.withColumn(MATCHES_COLUMN, errorMessage)
       changedData = changedData.withColumn("Condition Failed", when(col(MATCHES_COLUMN) === false, concat_ws("",col("Condition Failed"),lit("---") ,lit(errorMessage.toString()))).otherwise(col("Condition Failed")))
-      changedData = changedData.withColumn(MATCHES_COLUMN, nextCnf)
       nextCnf
 
     }
-    changedData
+    changedData.withColumn(MATCHES_COLUMN,nextCnf)
   }
 }

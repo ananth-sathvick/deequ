@@ -3,13 +3,7 @@ package com.accolite
 import com.amazon.deequ.schema.{RowLevelSchema, RowLevelSchemaValidator}
 
 object verification extends App {
-//  var titanicData = spark_session.titanicData;
-//
-//  val schema = RowLevelSchema()
-//    .withIntColumn("PassengerId", isNullable = false)
-//    .withStringColumn("Name", isNullable = false)
-//
-//  val result = RowLevelSchemaValidator.validate(titanicData, schema)
+  
   import spark_session.spark.implicits._
   val data = Seq(
     ("123", "Product A", "2012-07-22 22:59:59"),
