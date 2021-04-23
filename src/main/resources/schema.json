@@ -1,0 +1,23 @@
+[
+  {
+    "type": "Integer",
+    "colName": "id",
+    "isNullable": false,
+    "minValue": null,
+    "maxValue": null
+  },
+  {
+    "type": "String",
+    "colName": "name",
+    "isNullable": true,
+    "minLength": null,
+    "maxLength": 10,
+    "matches": null
+  },
+  {
+    "type": "TimeStamp",
+    "colName": "event_time",
+    "isNullable": false,
+    "mask": "yyyy-MM-dd HH:mm:ss"
+  }
+]
