@@ -176,6 +176,63 @@ case class RowLevelSchemaValidationResult(
 /** Enforce a schema on textual data */
 object RowLevelSchemaValidator {
 
+  private[this] def min_or_max(x: Any): Option[Int] =
+  {
+    if(x == null)
+      return None
+    else
+      return Some(Integer.parseInt(x.toString))
+  }
+
+  def read_schema_from_data_frame(dataFrame: DataFrame): RowLevelSchema = {
+
+    var columnDefination_list: List[ColumnDefinition] = List()
+
+
+    dataFrame.collect().foreach(row =>{
+      row(row.fieldIndex("type")) match {
+        case "Integer" => {
+          columnDefination_list = columnDefination_list ::: List(IntColumnDefinition(
+            row(row.fieldIndex("colName")).toString,
+            row(row.fieldIndex("isNullable")).asInstanceOf[Boolean],
+            min_or_max(row(row.fieldIndex("minValue"))),
+            min_or_max(row(row.fieldIndex("maxValue")))))
+        }
+        case "String" => {
+          columnDefination_list = columnDefination_list ::: List(StringColumnDefinition(
+            row(row.fieldIndex("colName")).toString,
+            row(row.fieldIndex("isNullable")).asInstanceOf[Boolean],
+            min_or_max(row(row.fieldIndex("minLength"))),
+            min_or_max(row(row.fieldIndex("maxLength"))),
+            Option[String](row(row.fieldIndex("matches")).asInstanceOf[String])
+          ))
+        }
+        case "Decimal" => {
+          columnDefination_list = columnDefination_list ::: List(DecimalColumnDefinition(
+            name = row(row.fieldIndex("colName")).toString,
+            precision = Integer.parseInt(row(row.fieldIndex("precision")).toString),
+            scale = Integer.parseInt(row(row.fieldIndex("scale")).toString),
+            isNullable = row(row.fieldIndex("isNullable")).asInstanceOf[Boolean]
+          ))
+        }
+        case "TimeStamp" => {
+          columnDefination_list = columnDefination_list ::: List(TimestampColumnDefinition(
+            name = row(row.fieldIndex("colName")).toString,
+            mask = row(row.fieldIndex("mask")).toString,
+            isNullable = row(row.fieldIndex("isNullable")).asInstanceOf[Boolean]
+          ))
+        }
+        case _ => {
+          println("Invalid input schema")
+        }
+      }
+
+    })
+
+    RowLevelSchema(columnDefination_list)
+  }
+
+
   private[this] val MATCHES_COLUMN = "__deequ__matches__schema"
 
   /**
